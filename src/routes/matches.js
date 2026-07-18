@@ -31,6 +31,8 @@ matchRouter.post("/", (req, res) => {
         awayScore:awayScore??0,
         status:getMatchStatus(startTime,endTime),
     }).returning();
+    
+    res.status(201).json({data:event})
   } catch (e) {
     res
       .status(500)
