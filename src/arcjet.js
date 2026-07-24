@@ -1,5 +1,4 @@
 import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/node";
-import { sl } from "zod/locales";
 
 const arcjetKey = process.env.ARCJET_KEY;
 const arcjetMode = process.env.ARCJET_MODE === "Dry Run" ? "Dry Run" : "LIVE";
@@ -20,6 +19,18 @@ export const httpArcjet = arcjetKey
     })
   : null;
 
+export function isLocalRequest(req) {
+  // Use the peer address instead of Host: Host can be supplied by any remote
+  // client, while the socket address tells us where the connection came from.
+  const address = req.socket?.remoteAddress || req.connection?.remoteAddress;
+
+  return (
+    address === "127.0.0.1" ||
+    address === "::1" ||
+    address === "::ffff:127.0.0.1"
+  );
+}
+
   export const wsArcjet= arcjetKey ?
   arcjet({
     key:arcjetKey,
@@ -32,6 +43,8 @@ export const httpArcjet = arcjetKey
 
   export function securityMiddleware(){
     return async(req,res,next)=>{
+      if (isLocalRequest(req)) return next();
+
       if(!httpArcjet) return next();
 
       try {
